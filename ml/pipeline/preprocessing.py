@@ -103,28 +103,29 @@ def split_data(df: pd.DataFrame, test_size: float = 0.2, random_state: int = 42)
     )
 
 
+PROCESSED_DATA_DIR = Path("data/processed")
+
 def run_pipeline():
-    """End-to-end run: load -> split -> fit on train -> transform both -> save artifact."""
     df = load_data()
     X_train, X_test, y_train, y_test = split_data(df)
 
     preprocessor = build_preprocessor()
-
-    # Fit ONLY on train — the test set must stay "unseen," or scaling/encoding
-    # statistics would leak information from test into train.
     X_train_processed = preprocessor.fit_transform(X_train)
     X_test_processed = preprocessor.transform(X_test)
 
-    ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
-    joblib.dump(preprocessor, ARTIFACTS_DIR / "preprocessor.joblib")
+    # Save the fitted preprocessor (you already have this)
+    Path("ml/artifacts").mkdir(parents=True, exist_ok=True)
+    joblib.dump(preprocessor, "ml/artifacts/preprocessor.joblib")
 
-    print(f"Train shape (processed): {X_train_processed.shape}")
-    print(f"Test shape  (processed): {X_test_processed.shape}")
-    print(f"Total encoded feature count: {len(preprocessor.get_feature_names_out())}")
-    print(f"Preprocessor saved to: {ARTIFACTS_DIR / 'preprocessor.joblib'}")
+    # NEW: persist processed arrays + targets
+    PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    joblib.dump(X_train_processed, PROCESSED_DATA_DIR / "X_train.joblib")
+    joblib.dump(X_test_processed, PROCESSED_DATA_DIR / "X_test.joblib")
+    joblib.dump(y_train, PROCESSED_DATA_DIR / "y_train.joblib")
+    joblib.dump(y_test, PROCESSED_DATA_DIR / "y_test.joblib")
+    print(f"Processed data saved to: {PROCESSED_DATA_DIR}")
 
     return X_train_processed, X_test_processed, y_train, y_test
-
 
 if __name__ == "__main__":
     run_pipeline()
