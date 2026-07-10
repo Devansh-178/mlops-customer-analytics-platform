@@ -19,6 +19,7 @@ ml/artifacts/*.joblib
 
 # MLflow tracking data (local experiment logs, not code)
 mlruns/
+mlflow.db
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
