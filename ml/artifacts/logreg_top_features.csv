@@ -1,0 +1,16 @@
+feature,coefficient
+num__tenure,-0.9785438619112466
+cat__Contract_Two year,-0.7142145898244749
+cat__Contract_Month-to-month,0.6055597183309801
+cat__InternetService_DSL,-0.3786628534878212
+cat__PaperlessBilling_Yes,0.3184853071347447
+cat__InternetService_Fiber optic,0.30386897259478834
+num__TotalCharges,0.2923473455325287
+cat__PhoneService_Yes,-0.26401449024340545
+cat__OnlineSecurity_Yes,-0.25623257800334387
+cat__MultipleLines_No,-0.24236717150574286
+cat__PaymentMethod_Electronic check,0.23085992143927944
+cat__TechSupport_Yes,-0.22402240805401918
+cat__Dependents_Yes,-0.22298521541266542
+cat__OnlineSecurity_No,0.18143869711034494
+cat__PaymentMethod_Credit card (automatic),-0.17266226379873376
