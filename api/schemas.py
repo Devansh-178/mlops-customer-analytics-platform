@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Literal
+from typing import Literal, Optional, List
 
 class CustomerFeatures(BaseModel):
     gender: Literal["Male", "Female"]
@@ -28,3 +29,18 @@ class CustomerFeatures(BaseModel):
 class PredictionResponse(BaseModel):
     churn_prediction: Literal["Yes", "No"]
     churn_probability: float
+
+
+class BatchPredictionResult(BaseModel):
+    row_index: int
+    customer_id: Optional[str] = None
+    status: Literal["success", "error"]
+    prediction: Optional[PredictionResponse] = None
+    error: Optional[str] = None
+
+
+class BatchPredictionResponse(BaseModel):
+    total: int
+    succeeded: int
+    failed: int
+    results: List[BatchPredictionResult]

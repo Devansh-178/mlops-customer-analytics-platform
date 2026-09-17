@@ -60,3 +60,32 @@ def predict(customer: dict) -> dict:
 
     response.raise_for_status()
     return response.json()
+def predict_batch(records: list[dict]) -> dict:
+    """
+    POST a list of customer records to /predict/batch.
+    Row-level failures are embedded in the response body (status="error"
+    per row) rather than raised as exceptions, since one bad row doesn't
+    fail the whole request.
+    Raises APIUnreachableError or ServerError on transport/server failure.
+    """
+    url = f"{API_BASE_URL}/predict/batch"
+
+    try:
+        response = requests.post(url, json=records, timeout=REQUEST_TIMEOUT_SECONDS)
+    except requests.exceptions.ConnectionError as e:
+        raise APIUnreachableError(f"Could not connect to API at {url}") from e
+    except requests.exceptions.Timeout as e:
+        raise APIUnreachableError(f"API request timed out after {REQUEST_TIMEOUT_SECONDS}s") from e
+
+    if response.status_code == 200:
+        return response.json()
+
+    if response.status_code == 500:
+        try:
+            detail = response.json().get("detail", "Internal server error")
+        except ValueError:
+            detail = response.text
+        raise ServerError(detail)
+
+    response.raise_for_status()
+    return response.json()

@@ -1,5 +1,8 @@
 # dashboard/app.py
 
+import pandas as pd
+from api_client import predict, predict_batch, APIUnreachableError, ValidationError, ServerError
+
 import streamlit as st
 from api_client import predict, APIUnreachableError, ValidationError, ServerError
 
@@ -128,3 +131,56 @@ if submitted:
 
         st.metric("Churn Probability", f"{probability:.1%}")
         st.progress(min(max(probability, 0.0), 1.0))
+
+st.divider()
+st.header("Batch Prediction")
+st.caption("Upload a CSV of customer records — calls the FastAPI /predict/batch endpoint")
+
+uploaded_file = st.file_uploader("Upload customer CSV", type=["csv"])
+
+if uploaded_file is not None:
+    batch_df = pd.read_csv(uploaded_file)
+    st.write(f"{len(batch_df)} rows loaded")
+    st.dataframe(batch_df.head())
+
+    if st.button("Predict Batch"):
+        records = batch_df.to_dict(orient="records")
+
+        try:
+            batch_result = predict_batch(records)
+        except APIUnreachableError as e:
+            st.error(f"Can't reach the prediction API. Is uvicorn running?\n\n`{e}`")
+        except ServerError as e:
+            st.error(f"The API hit an internal error (500) while processing this batch.\n\nDetails: {e.detail}")
+        else:
+            st.divider()
+            st.subheader("Batch Results")
+
+            col_a, col_b, col_c = st.columns(3)
+            col_a.metric("Total", batch_result["total"])
+            col_b.metric("Succeeded", batch_result["succeeded"])
+            col_c.metric("Failed", batch_result["failed"])
+
+            rows = []
+            for r in batch_result["results"]:
+                if r["status"] == "success":
+                    rows.append({
+                        "Row": r["row_index"],
+                        "Customer ID": r["customer_id"],
+                        "Status": "✅ Success",
+                        "Churn Prediction": r["prediction"]["churn_prediction"],
+                        "Churn Probability": r["prediction"]["churn_probability"],
+                        "Error": "",
+                    })
+                else:
+                    rows.append({
+                        "Row": r["row_index"],
+                        "Customer ID": r["customer_id"],
+                        "Status": "❌ Error",
+                        "Churn Prediction": "",
+                        "Churn Probability": "",
+                        "Error": r["error"],
+                    })
+
+            results_df = pd.DataFrame(rows)
+            st.dataframe(results_df, use_container_width=True)
